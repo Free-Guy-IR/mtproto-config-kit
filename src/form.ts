@@ -10,6 +10,7 @@ export type MTProtoInstanceDraft = {
   readonly tag: string;
   readonly port: number | string;
   readonly fakeTlsDomain: string;
+  readonly adTag: string;
 };
 
 export type MTProtoCoreDraft = {
@@ -43,7 +44,8 @@ export function createDefaultMTProtoInstanceDraft(existingTags: readonly string[
   return {
     tag: uniqueDefaultTag(existingTags),
     port: existingTags.length === 0 ? 443 : randomPort(),
-    fakeTlsDomain: ""
+    fakeTlsDomain: "",
+    adTag: ""
   };
 }
 
@@ -79,6 +81,18 @@ export function validateMTProtoInstanceDraft(draft: MTProtoInstanceDraft, index:
     issues.push(issue(`${base}/fakeTlsDomain`, "MT_FORM_DOMAIN_REQUIRED", "Fake-TLS domain is required."));
   }
 
+  const adTag = draft.adTag.trim();
+  if (adTag) {
+    if (!/^[0-9a-fA-F]+$/.test(adTag) || adTag.length % 2 !== 0) {
+      issues.push(issue(`${base}/adTag`, "MT_FORM_ADTAG_INVALID", "Ad tag must be a valid hex string."));
+    } else {
+      const byteLength = adTag.length / 2;
+      if (byteLength < 1 || byteLength > 255) {
+        issues.push(issue(`${base}/adTag`, "MT_FORM_ADTAG_INVALID", "Ad tag must decode to 1-255 bytes."));
+      }
+    }
+  }
+
   return issues;
 }
 
@@ -108,7 +122,8 @@ function instanceOptionsFromDraft(draft: MTProtoInstanceDraft): CreateMTProtoIns
   return {
     tag: draft.tag.trim(),
     port,
-    fakeTlsDomain: draft.fakeTlsDomain.trim()
+    fakeTlsDomain: draft.fakeTlsDomain.trim(),
+    adTag: draft.adTag.trim() || undefined
   };
 }
 

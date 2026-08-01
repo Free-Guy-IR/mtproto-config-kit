@@ -9,7 +9,8 @@ const instanceSchema = z
   .object({
     tag: z.string(),
     port: z.number(),
-    fake_tls_domain: z.string()
+    fake_tls_domain: z.string(),
+    ad_tag: z.string().optional()
   })
   .catchall(jsonValueSchema);
 
@@ -51,6 +52,16 @@ function validateInstance(instance: z.infer<typeof instanceSchema>, index: numbe
 
   if (!instance.fake_tls_domain.trim()) {
     throw new Error(`${path}/fake_tls_domain: fake_tls_domain is required.`);
+  }
+
+  if (instance.ad_tag) {
+    if (!/^[0-9a-fA-F]+$/.test(instance.ad_tag) || instance.ad_tag.length % 2 !== 0) {
+      throw new Error(`${path}/ad_tag: ad_tag must be a valid hex string.`);
+    }
+    const byteLength = instance.ad_tag.length / 2;
+    if (byteLength < 1 || byteLength > 255) {
+      throw new Error(`${path}/ad_tag: ad_tag must decode to 1-255 bytes.`);
+    }
   }
 }
 

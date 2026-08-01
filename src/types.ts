@@ -20,6 +20,16 @@ export type MTProtoInstance = JsonObject & {
   readonly tag: string;
   readonly port: number;
   readonly fake_tls_domain: string;
+  /**
+   * Hex-encoded Telegram middle-proxy "ad tag" (obtained by registering the
+   * proxy with @MTProxybot), which activates sponsor-channel promotion for
+   * clients connecting to this instance. Optional - most instances have
+   * none. When set, the node relays this instance through Telegram's
+   * middle-proxy servers instead of straight to the DC (see the node
+   * repo's backend/mtproto/middleproxy package), a materially different
+   * and higher-overhead path, which is why this stays opt-in per instance.
+   */
+  readonly ad_tag?: string;
 };
 
 export type MTProtoCoreConfig = JsonObject & {
@@ -39,6 +49,7 @@ export type CreateMTProtoInstanceOptions = {
   readonly tag: string;
   readonly port: number;
   readonly fakeTlsDomain: string;
+  readonly adTag?: string;
 };
 
 export type CreateMTProtoCoreConfigOptions = {

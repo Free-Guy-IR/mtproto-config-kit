@@ -16,6 +16,10 @@ export function createMTProtoInstanceConfig(options: CreateMTProtoInstanceOption
     fake_tls_domain: options.fakeTlsDomain
   };
 
+  if (options.adTag) {
+    instance.ad_tag = options.adTag;
+  }
+
   return instance as MTProtoInstance;
 }
 
