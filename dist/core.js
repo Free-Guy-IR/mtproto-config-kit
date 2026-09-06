@@ -1,10 +1,14 @@
 import { assertValidMTProtoCoreConfig } from "./validation.js";
 export function createMTProtoInstanceConfig(options) {
+    const mode = options.mode ?? "faketls";
     const instance = {
         tag: options.tag,
         port: options.port,
-        fake_tls_domain: options.fakeTlsDomain
+        mode
     };
+    if (mode === "faketls") {
+        instance.fake_tls_domain = options.fakeTlsDomain ?? "";
+    }
     if (options.adTag) {
         instance.ad_tag = options.adTag;
     }

@@ -1,4 +1,4 @@
-import type { MTProtoCoreConfig, MTProtoValidationIssue } from "./types.js";
+import type { MTProtoCoreConfig, MTProtoInstanceMode, MTProtoValidationIssue } from "./types.js";
 /**
  * Form-state shape for a single MTProto instance, distinct from the persisted JSON shape -
  * `port` is `number | string` to match the "random port" generator button pattern already
@@ -7,6 +7,7 @@ import type { MTProtoCoreConfig, MTProtoValidationIssue } from "./types.js";
 export type MTProtoInstanceDraft = {
     readonly tag: string;
     readonly port: number | string;
+    readonly mode: MTProtoInstanceMode;
     readonly fakeTlsDomain: string;
     readonly adTag: string;
 };

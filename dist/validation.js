@@ -4,7 +4,8 @@ const instanceSchema = z
     .object({
     tag: z.string(),
     port: z.number(),
-    fake_tls_domain: z.string(),
+    mode: z.enum(["faketls", "plain"]).optional(),
+    fake_tls_domain: z.string().optional(),
     ad_tag: z.string().optional()
 })
     .catchall(jsonValueSchema);
@@ -39,8 +40,12 @@ function validateInstance(instance, index, seenTags, seenPorts) {
         throw new Error(`${path}/port: duplicate port ${instance.port} within this core config.`);
     }
     seenPorts.add(instance.port);
-    if (!instance.fake_tls_domain.trim()) {
-        throw new Error(`${path}/fake_tls_domain: fake_tls_domain is required.`);
+    const mode = instance.mode ?? "faketls";
+    if (mode === "faketls" && !(instance.fake_tls_domain ?? "").trim()) {
+        throw new Error(`${path}/fake_tls_domain: fake_tls_domain is required for faketls mode.`);
+    }
+    if (mode === "plain" && instance.ad_tag) {
+        throw new Error(`${path}/ad_tag: plain mode cannot be combined with ad_tag.`);
     }
     if (instance.ad_tag) {
         if (!/^[0-9a-fA-F]+$/.test(instance.ad_tag) || instance.ad_tag.length % 2 !== 0) {
@@ -93,6 +98,6 @@ export function assertValidMTProtoCoreConfig(input) {
     return result.config;
 }
 export function isMTProtoInstance(value) {
-    return !!value && typeof value === "object" && typeof value.tag === "string" && typeof value.fake_tls_domain === "string";
+    return !!value && typeof value === "object" && typeof value.tag === "string" && typeof value.port === "number";
 }
 //# sourceMappingURL=validation.js.map

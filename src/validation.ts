@@ -9,7 +9,8 @@ const instanceSchema = z
   .object({
     tag: z.string(),
     port: z.number(),
-    fake_tls_domain: z.string(),
+    mode: z.enum(["faketls", "plain"]).optional(),
+    fake_tls_domain: z.string().optional(),
     ad_tag: z.string().optional()
   })
   .catchall(jsonValueSchema);
@@ -50,8 +51,12 @@ function validateInstance(instance: z.infer<typeof instanceSchema>, index: numbe
   }
   seenPorts.add(instance.port);
 
-  if (!instance.fake_tls_domain.trim()) {
-    throw new Error(`${path}/fake_tls_domain: fake_tls_domain is required.`);
+  const mode = instance.mode ?? "faketls";
+  if (mode === "faketls" && !(instance.fake_tls_domain ?? "").trim()) {
+    throw new Error(`${path}/fake_tls_domain: fake_tls_domain is required for faketls mode.`);
+  }
+  if (mode === "plain" && instance.ad_tag) {
+    throw new Error(`${path}/ad_tag: plain mode cannot be combined with ad_tag.`);
   }
 
   if (instance.ad_tag) {
@@ -118,5 +123,5 @@ export function assertValidMTProtoCoreConfig(input: unknown): MTProtoCoreConfig 
 }
 
 export function isMTProtoInstance(value: unknown): value is MTProtoInstance {
-  return !!value && typeof value === "object" && typeof (value as Record<string, unknown>).tag === "string" && typeof (value as Record<string, unknown>).fake_tls_domain === "string";
+  return !!value && typeof value === "object" && typeof (value as Record<string, unknown>).tag === "string" && typeof (value as Record<string, unknown>).port === "number";
 }

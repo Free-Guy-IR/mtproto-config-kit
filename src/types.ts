@@ -16,10 +16,13 @@ export type JsonObject = { readonly [key: string]: JsonValue };
  * secrets are symmetric, not certificate-based) - the only two things that
  * ever vary between instances are the port and the fake-TLS domain.
  */
+export type MTProtoInstanceMode = "faketls" | "plain";
+
 export type MTProtoInstance = JsonObject & {
   readonly tag: string;
   readonly port: number;
-  readonly fake_tls_domain: string;
+  readonly mode?: MTProtoInstanceMode;
+  readonly fake_tls_domain?: string;
   /**
    * Hex-encoded Telegram middle-proxy "ad tag" (obtained by registering the
    * proxy with @MTProxybot), which activates sponsor-channel promotion for
@@ -48,7 +51,8 @@ export type MTProtoCorePayload = {
 export type CreateMTProtoInstanceOptions = {
   readonly tag: string;
   readonly port: number;
-  readonly fakeTlsDomain: string;
+  readonly mode?: MTProtoInstanceMode;
+  readonly fakeTlsDomain?: string;
   readonly adTag?: string;
 };
 

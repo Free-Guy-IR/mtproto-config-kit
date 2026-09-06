@@ -10,11 +10,16 @@ import type {
 } from "./types.js";
 
 export function createMTProtoInstanceConfig(options: CreateMTProtoInstanceOptions): MTProtoInstance {
+  const mode = options.mode ?? "faketls";
   const instance: Record<string, JsonValue> = {
     tag: options.tag,
     port: options.port,
-    fake_tls_domain: options.fakeTlsDomain
+    mode
   };
+
+  if (mode === "faketls") {
+    instance.fake_tls_domain = options.fakeTlsDomain ?? "";
+  }
 
   if (options.adTag) {
     instance.ad_tag = options.adTag;

@@ -1,5 +1,5 @@
 import { createMTProtoCoreConfig, createMTProtoInstanceConfig } from "./core.js";
-import type { CreateMTProtoInstanceOptions, MTProtoCoreConfig, MTProtoValidationIssue } from "./types.js";
+import type { CreateMTProtoInstanceOptions, MTProtoCoreConfig, MTProtoInstanceMode, MTProtoValidationIssue } from "./types.js";
 
 /**
  * Form-state shape for a single MTProto instance, distinct from the persisted JSON shape -
@@ -9,6 +9,7 @@ import type { CreateMTProtoInstanceOptions, MTProtoCoreConfig, MTProtoValidation
 export type MTProtoInstanceDraft = {
   readonly tag: string;
   readonly port: number | string;
+  readonly mode: MTProtoInstanceMode;
   readonly fakeTlsDomain: string;
   readonly adTag: string;
 };
@@ -44,6 +45,7 @@ export function createDefaultMTProtoInstanceDraft(existingTags: readonly string[
   return {
     tag: uniqueDefaultTag(existingTags),
     port: existingTags.length === 0 ? 443 : randomPort(),
+    mode: "faketls",
     fakeTlsDomain: "",
     adTag: ""
   };
@@ -77,11 +79,14 @@ export function validateMTProtoInstanceDraft(draft: MTProtoInstanceDraft, index:
     }
   }
 
-  if (!draft.fakeTlsDomain.trim()) {
+  if (draft.mode === "faketls" && !draft.fakeTlsDomain.trim()) {
     issues.push(issue(`${base}/fakeTlsDomain`, "MT_FORM_DOMAIN_REQUIRED", "Fake-TLS domain is required."));
   }
 
   const adTag = draft.adTag.trim();
+  if (draft.mode === "plain" && adTag) {
+    issues.push(issue(`${base}/adTag`, "MT_FORM_ADTAG_PLAIN", "Ad tag cannot be used with plain mode."));
+  }
   if (adTag) {
     if (!/^[0-9a-fA-F]+$/.test(adTag) || adTag.length % 2 !== 0) {
       issues.push(issue(`${base}/adTag`, "MT_FORM_ADTAG_INVALID", "Ad tag must be a valid hex string."));
@@ -122,7 +127,8 @@ function instanceOptionsFromDraft(draft: MTProtoInstanceDraft): CreateMTProtoIns
   return {
     tag: draft.tag.trim(),
     port,
-    fakeTlsDomain: draft.fakeTlsDomain.trim(),
+    mode: draft.mode,
+    fakeTlsDomain: draft.mode === "faketls" ? draft.fakeTlsDomain.trim() : undefined,
     adTag: draft.adTag.trim() || undefined
   };
 }

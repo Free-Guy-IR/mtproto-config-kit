@@ -19,6 +19,7 @@ export type {
   MTProtoCoreConfig,
   MTProtoCorePayload,
   MTProtoInstance,
+  MTProtoInstanceMode,
   MTProtoValidationIssue,
   MTProtoValidationResult
 } from "./types.js";
