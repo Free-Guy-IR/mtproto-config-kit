@@ -8,12 +8,14 @@ export type MTProtoInstanceDraft = {
     readonly tag: string;
     readonly port: number | string;
     readonly mode: MTProtoInstanceMode;
-    readonly fakeTlsDomain: string;
+    readonly fakeTlsDomains: string;
     readonly adTag: string;
 };
 export type MTProtoCoreDraft = {
     readonly instances: readonly MTProtoInstanceDraft[];
 };
+export declare function splitDomains(raw: string): string[];
+export declare function joinDomains(domains: readonly string[]): string;
 export declare function createDefaultMTProtoInstanceDraft(existingTags?: readonly string[]): MTProtoInstanceDraft;
 export declare function createDefaultMTProtoCoreDraft(): MTProtoCoreDraft;
 /** Mirrors the validation.ts semantic rules, at the draft/form level (pre-serialization). */

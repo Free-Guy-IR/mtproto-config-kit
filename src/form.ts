@@ -1,4 +1,5 @@
 import { createMTProtoCoreConfig, createMTProtoInstanceConfig } from "./core.js";
+import { instanceDomains } from "./validation.js";
 import type { CreateMTProtoInstanceOptions, MTProtoCoreConfig, MTProtoInstanceMode, MTProtoValidationIssue } from "./types.js";
 
 /**
@@ -10,7 +11,7 @@ export type MTProtoInstanceDraft = {
   readonly tag: string;
   readonly port: number | string;
   readonly mode: MTProtoInstanceMode;
-  readonly fakeTlsDomain: string;
+  readonly fakeTlsDomains: string;
   readonly adTag: string;
 };
 
@@ -20,6 +21,17 @@ export type MTProtoCoreDraft = {
 
 function issue(path: string, code: string, message: string): MTProtoValidationIssue {
   return { path, code, message };
+}
+
+export function splitDomains(raw: string): string[] {
+  return raw
+    .split(/[\s,;]+/)
+    .map(d => d.trim().toLowerCase().replace(/\.$/, ""))
+    .filter(Boolean);
+}
+
+export function joinDomains(domains: readonly string[]): string {
+  return domains.join("\n");
 }
 
 function parsePort(value: number | string): number | undefined {
@@ -46,7 +58,7 @@ export function createDefaultMTProtoInstanceDraft(existingTags: readonly string[
     tag: uniqueDefaultTag(existingTags),
     port: existingTags.length === 0 ? 443 : randomPort(),
     mode: "faketls",
-    fakeTlsDomain: "",
+    fakeTlsDomains: "",
     adTag: ""
   };
 }
@@ -79,8 +91,15 @@ export function validateMTProtoInstanceDraft(draft: MTProtoInstanceDraft, index:
     }
   }
 
-  if (draft.mode === "faketls" && !draft.fakeTlsDomain.trim()) {
-    issues.push(issue(`${base}/fakeTlsDomain`, "MT_FORM_DOMAIN_REQUIRED", "Fake-TLS domain is required."));
+  const domains = splitDomains(draft.fakeTlsDomains);
+
+  if (draft.mode === "faketls" && domains.length === 0) {
+    issues.push(issue(`${base}/fakeTlsDomains`, "MT_FORM_DOMAIN_REQUIRED", "At least one fake-TLS domain is required."));
+  }
+
+  const dupes = domains.filter((d, i) => domains.indexOf(d) !== i);
+  if (dupes.length > 0) {
+    issues.push(issue(`${base}/fakeTlsDomains`, "MT_FORM_DOMAIN_DUPLICATE", `Duplicate fake-TLS domain: ${dupes[0]}.`));
   }
 
   const adTag = draft.adTag.trim();
@@ -128,7 +147,7 @@ function instanceOptionsFromDraft(draft: MTProtoInstanceDraft): CreateMTProtoIns
     tag: draft.tag.trim(),
     port,
     mode: draft.mode,
-    fakeTlsDomain: draft.mode === "faketls" ? draft.fakeTlsDomain.trim() : undefined,
+    fakeTlsDomains: draft.mode === "faketls" ? splitDomains(draft.fakeTlsDomains) : undefined,
     adTag: draft.adTag.trim() || undefined
   };
 }

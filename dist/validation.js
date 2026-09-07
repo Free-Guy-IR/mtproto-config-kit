@@ -6,6 +6,7 @@ const instanceSchema = z
     port: z.number(),
     mode: z.enum(["faketls", "plain"]).optional(),
     fake_tls_domain: z.string().optional(),
+    fake_tls_domains: z.array(z.string()).optional(),
     ad_tag: z.string().optional()
 })
     .catchall(jsonValueSchema);
@@ -14,6 +15,13 @@ const rawMTProtoCoreConfigSchema = z
     instances: z.array(instanceSchema)
 })
     .catchall(jsonValueSchema);
+export function instanceDomains(instance) {
+    const many = (instance.fake_tls_domains ?? []).map(d => d.trim()).filter(Boolean);
+    if (many.length > 0)
+        return many;
+    const one = (instance.fake_tls_domain ?? "").trim();
+    return one ? [one] : [];
+}
 function issue(path, code, message) {
     return { path, code, message };
 }
@@ -41,8 +49,15 @@ function validateInstance(instance, index, seenTags, seenPorts) {
     }
     seenPorts.add(instance.port);
     const mode = instance.mode ?? "faketls";
-    if (mode === "faketls" && !(instance.fake_tls_domain ?? "").trim()) {
-        throw new Error(`${path}/fake_tls_domain: fake_tls_domain is required for faketls mode.`);
+    const domains = instanceDomains(instance);
+    if (mode === "faketls" && domains.length === 0) {
+        throw new Error(`${path}/fake_tls_domain: at least one fake-TLS domain is required for faketls mode.`);
+    }
+    if (new Set(domains).size !== domains.length) {
+        throw new Error(`${path}/fake_tls_domains: the fake-TLS domain list contains duplicates.`);
+    }
+    if (mode === "plain" && (instance.fake_tls_domains ?? []).length > 0) {
+        throw new Error(`${path}/fake_tls_domains: plain mode cannot set fake-TLS domains.`);
     }
     if (mode === "plain" && instance.ad_tag) {
         throw new Error(`${path}/ad_tag: plain mode cannot be combined with ad_tag.`);

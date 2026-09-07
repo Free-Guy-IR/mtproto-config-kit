@@ -7,7 +7,13 @@ export function createMTProtoInstanceConfig(options) {
         mode
     };
     if (mode === "faketls") {
-        instance.fake_tls_domain = options.fakeTlsDomain ?? "";
+        const domains = (options.fakeTlsDomains ?? []).map(d => d.trim()).filter(Boolean);
+        if (domains.length > 1) {
+            instance.fake_tls_domains = domains;
+        }
+        else {
+            instance.fake_tls_domain = domains[0] ?? "";
+        }
     }
     if (options.adTag) {
         instance.ad_tag = options.adTag;

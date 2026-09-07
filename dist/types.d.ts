@@ -49,7 +49,7 @@ export type CreateMTProtoInstanceOptions = {
     readonly tag: string;
     readonly port: number;
     readonly mode?: MTProtoInstanceMode;
-    readonly fakeTlsDomain?: string;
+    readonly fakeTlsDomains?: readonly string[];
     readonly adTag?: string;
 };
 export type CreateMTProtoCoreConfigOptions = {

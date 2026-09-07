@@ -5,10 +5,12 @@ export {
   createMTProtoCoreConfigFromDraft,
   createMTProtoInstanceConfigFromDraft,
   generateMTProtoCoreConfigJsonFromDraft,
+  joinDomains,
+  splitDomains,
   validateMTProtoCoreDraft,
   validateMTProtoInstanceDraft
 } from "./form.js";
-export { assertValidMTProtoCoreConfig, isMTProtoInstance, validateMTProtoCoreConfig } from "./validation.js";
+export { assertValidMTProtoCoreConfig, instanceDomains, isMTProtoInstance, validateMTProtoCoreConfig } from "./validation.js";
 export type {
   CreateMTProtoCoreConfigOptions,
   CreateMTProtoCorePayloadOptions,

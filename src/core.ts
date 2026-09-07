@@ -18,7 +18,12 @@ export function createMTProtoInstanceConfig(options: CreateMTProtoInstanceOption
   };
 
   if (mode === "faketls") {
-    instance.fake_tls_domain = options.fakeTlsDomain ?? "";
+    const domains = (options.fakeTlsDomains ?? []).map(d => d.trim()).filter(Boolean);
+    if (domains.length > 1) {
+      instance.fake_tls_domains = domains as unknown as JsonValue;
+    } else {
+      instance.fake_tls_domain = domains[0] ?? "";
+    }
   }
 
   if (options.adTag) {

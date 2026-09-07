@@ -1,6 +1,16 @@
 import { createMTProtoCoreConfig, createMTProtoInstanceConfig } from "./core.js";
+import { instanceDomains } from "./validation.js";
 function issue(path, code, message) {
     return { path, code, message };
+}
+export function splitDomains(raw) {
+    return raw
+        .split(/[\s,;]+/)
+        .map(d => d.trim().toLowerCase().replace(/\.$/, ""))
+        .filter(Boolean);
+}
+export function joinDomains(domains) {
+    return domains.join("\n");
 }
 function parsePort(value) {
     if (typeof value === "number")
@@ -27,7 +37,7 @@ export function createDefaultMTProtoInstanceDraft(existingTags = []) {
         tag: uniqueDefaultTag(existingTags),
         port: existingTags.length === 0 ? 443 : randomPort(),
         mode: "faketls",
-        fakeTlsDomain: "",
+        fakeTlsDomains: "",
         adTag: ""
     };
 }
@@ -57,8 +67,13 @@ export function validateMTProtoInstanceDraft(draft, index, allTags, allPorts) {
             issues.push(issue(`${base}/port`, "MT_FORM_PORT_DUPLICATE", `Duplicate port ${port} within this core config.`));
         }
     }
-    if (draft.mode === "faketls" && !draft.fakeTlsDomain.trim()) {
-        issues.push(issue(`${base}/fakeTlsDomain`, "MT_FORM_DOMAIN_REQUIRED", "Fake-TLS domain is required."));
+    const domains = splitDomains(draft.fakeTlsDomains);
+    if (draft.mode === "faketls" && domains.length === 0) {
+        issues.push(issue(`${base}/fakeTlsDomains`, "MT_FORM_DOMAIN_REQUIRED", "At least one fake-TLS domain is required."));
+    }
+    const dupes = domains.filter((d, i) => domains.indexOf(d) !== i);
+    if (dupes.length > 0) {
+        issues.push(issue(`${base}/fakeTlsDomains`, "MT_FORM_DOMAIN_DUPLICATE", `Duplicate fake-TLS domain: ${dupes[0]}.`));
     }
     const adTag = draft.adTag.trim();
     if (draft.mode === "plain" && adTag) {
@@ -99,7 +114,7 @@ function instanceOptionsFromDraft(draft) {
         tag: draft.tag.trim(),
         port,
         mode: draft.mode,
-        fakeTlsDomain: draft.mode === "faketls" ? draft.fakeTlsDomain.trim() : undefined,
+        fakeTlsDomains: draft.mode === "faketls" ? splitDomains(draft.fakeTlsDomains) : undefined,
         adTag: draft.adTag.trim() || undefined
     };
 }
